@@ -123,12 +123,16 @@ def create_dataloader(config: PretrainConfig, split: str, rank: int, world_size:
         num_replicas=world_size,
         **kwargs
     ), split=split)
+
+    # Disable pin_memory on MPS (not supported)
+    use_pin_memory = torch.cuda.is_available()
+
     dataloader = DataLoader(
         dataset,
         batch_size=None,
         num_workers=1,
         prefetch_factor=8,
-        pin_memory=True,
+        pin_memory=use_pin_memory,
         persistent_workers=True
     )
     return dataloader, dataset.metadata
