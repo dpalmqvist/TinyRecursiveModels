@@ -16,7 +16,7 @@ dataset_type: "chat"  # Use chat dataset loader
 evaluators: []
 
 # Training hyperparameters
-global_batch_size: 2  # Smaller for chat (longer sequences)
+global_batch_size: 4  # Smaller for chat (longer sequences)
 gradient_accumulation_steps: 8  # Number of batches to accumulate gradients over
 
 epochs: 100
