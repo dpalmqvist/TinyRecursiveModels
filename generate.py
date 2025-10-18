@@ -89,9 +89,12 @@ def create_inference_model(state_dict, model_cfg, arch_config, tokenizer, device
     model_cls = load_model_class(arch_config['name'])
     loss_head_cls = load_model_class(arch_config['loss']['name'])
 
+    # Extract loss head kwargs (exclude 'name' key)
+    loss_head_kwargs = {k: v for k, v in arch_config['loss'].items() if k != 'name'}
+
     with torch.device(device):
         model = model_cls(model_cfg)
-        model = loss_head_cls(model, **arch_config['loss'])
+        model = loss_head_cls(model, **loss_head_kwargs)
 
         # Load weights
         model.load_state_dict(state_dict, strict=False)
