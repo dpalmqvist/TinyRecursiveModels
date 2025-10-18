@@ -9,6 +9,16 @@ echo "========================================="
 echo "Preparing Example Chat Dataset"
 echo "========================================="
 
+# Get the directory where this script is located
+SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+# Get the project root (parent of examples/)
+PROJECT_ROOT="$( cd "$SCRIPT_DIR/.." && pwd )"
+
+# Change to project root
+cd "$PROJECT_ROOT"
+echo "Working from: $PROJECT_ROOT"
+echo ""
+
 # Check if transformers is installed
 python -c "import transformers" 2>/dev/null || {
     echo "Error: transformers library not found. Installing..."
