@@ -16,7 +16,7 @@ dataset_type: "chat"  # Use chat dataset loader
 evaluators: []
 
 # Training hyperparameters
-global_batch_size: 32  # Smaller for chat (longer sequences)
+global_batch_size: 16  # Smaller for chat (longer sequences)
 
 epochs: 100
 eval_interval: 10
