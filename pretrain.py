@@ -65,6 +65,7 @@ class PretrainConfig(pydantic.BaseModel):
 
     # Hyperparams
     global_batch_size: int
+    gradient_accumulation_steps: int = 1  # Number of steps to accumulate gradients
     epochs: int
 
     lr: float
@@ -105,6 +106,7 @@ class TrainState:
 
     step: int
     total_steps: int
+    micro_step: int = 0  # Track gradient accumulation progress
 
 
 def create_dataloader(config: PretrainConfig, split: str, rank: int, world_size: int, **kwargs):
@@ -312,9 +314,8 @@ def create_evaluators(config: PretrainConfig, eval_metadata: PuzzleDatasetMetada
     return evaluators
 
 def train_batch(config: PretrainConfig, train_state: TrainState, batch: Any, global_batch_size: int, rank: int, world_size: int, device: str = "cuda"):
-    train_state.step += 1
-    if train_state.step > train_state.total_steps:  # At most train_total_steps
-        return
+    # Increment micro step
+    train_state.micro_step += 1
 
     # To device
     batch = {k: v.to(device) for k, v in batch.items()}
@@ -327,45 +328,58 @@ def train_batch(config: PretrainConfig, train_state: TrainState, batch: Any, glo
     # Forward
     train_state.carry, loss, metrics, _, _ = train_state.model(carry=train_state.carry, batch=batch, return_keys=[])
 
-    ((1 / global_batch_size) * loss).backward()
+    # Scale loss by both batch size and accumulation steps
+    loss_scale = 1.0 / (global_batch_size * config.gradient_accumulation_steps)
+    (loss_scale * loss).backward()
 
-    # Allreduce
-    if world_size > 1:
-        for param in train_state.model.parameters():
-            if param.grad is not None:
-                dist.all_reduce(param.grad)
-            
-    # Apply optimizer
-    lr_this_step = None    
-    for optim, base_lr in zip(train_state.optimizers, train_state.optimizer_lrs):
-        lr_this_step = compute_lr(base_lr, config, train_state)
+    # Check if we should step the optimizer
+    should_step = (train_state.micro_step % config.gradient_accumulation_steps == 0)
 
-        for param_group in optim.param_groups:
-            param_group['lr'] = lr_this_step
-            
-        optim.step()
-        optim.zero_grad()
+    if should_step:
+        # Increment actual training step
+        train_state.step += 1
 
-    # Reduce metrics
-    if len(metrics):
-        assert not any(v.requires_grad for v in metrics.values())
+        if train_state.step > train_state.total_steps:  # At most train_total_steps
+            return
 
-        metric_keys = list(sorted(metrics.keys()))  # Sort keys to guarantee all processes use the same order.
-        # Reduce and reconstruct
-        metric_values = torch.stack([metrics[k] for k in metric_keys])
+        # Allreduce gradients across GPUs
         if world_size > 1:
-            dist.reduce(metric_values, dst=0)
+            for param in train_state.model.parameters():
+                if param.grad is not None:
+                    dist.all_reduce(param.grad)
 
-        if rank == 0:
-            metric_values = metric_values.cpu().numpy()
-            reduced_metrics = {k: metric_values[i] for i, k in enumerate(metric_keys)}
-            
-            # Postprocess
-            count = max(reduced_metrics["count"], 1)  # Avoid NaNs
-            reduced_metrics = {f"train/{k}": v / (global_batch_size if k.endswith("loss") else count) for k, v in reduced_metrics.items()}
+        # Apply optimizer
+        lr_this_step = None
+        for optim, base_lr in zip(train_state.optimizers, train_state.optimizer_lrs):
+            lr_this_step = compute_lr(base_lr, config, train_state)
 
-            reduced_metrics["train/lr"] = lr_this_step
-            return reduced_metrics
+            for param_group in optim.param_groups:
+                param_group['lr'] = lr_this_step
+
+            optim.step()
+            optim.zero_grad()
+
+        # Reduce metrics (only on optimizer step)
+        if len(metrics):
+            assert not any(v.requires_grad for v in metrics.values())
+
+            metric_keys = list(sorted(metrics.keys()))  # Sort keys to guarantee all processes use the same order.
+            # Reduce and reconstruct
+            metric_values = torch.stack([metrics[k] for k in metric_keys])
+            if world_size > 1:
+                dist.reduce(metric_values, dst=0)
+
+            if rank == 0:
+                metric_values = metric_values.cpu().numpy()
+                reduced_metrics = {k: metric_values[i] for i, k in enumerate(metric_keys)}
+
+                # Postprocess
+                count = max(reduced_metrics["count"], 1)  # Avoid NaNs
+                reduced_metrics = {f"train/{k}": v / (global_batch_size if k.endswith("loss") else count) for k, v in reduced_metrics.items()}
+
+                reduced_metrics["train/lr"] = lr_this_step
+                reduced_metrics["train/micro_step"] = train_state.micro_step
+                return reduced_metrics
 
 def evaluate(
     config: PretrainConfig,
