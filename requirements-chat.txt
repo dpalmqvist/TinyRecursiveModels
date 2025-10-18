@@ -18,4 +18,3 @@ transformers>=4.30.0
 # coolname
 # argdantic
 # einops
-# adam-atan2

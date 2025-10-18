@@ -17,7 +17,8 @@ import coolname
 import hydra
 import pydantic
 from omegaconf import DictConfig
-from adam_atan2 import AdamATan2
+# Using AdamW instead of AdamATan2 for better compatibility
+from torch.optim import AdamW
 
 from puzzle_dataset import PuzzleDataset, PuzzleDatasetConfig, PuzzleDatasetMetadata
 from chat_dataset import ChatDataset, ChatDatasetConfig
@@ -168,7 +169,7 @@ def create_model(config: PretrainConfig, train_metadata: PuzzleDatasetMetadata, 
     # Optimizers and lr
     if config.arch.puzzle_emb_ndim == 0:
         optimizers = [
-            AdamATan2(
+            AdamW(
                 model.parameters(),
                 lr=0,  # Needs to be set by scheduler
                 weight_decay=config.weight_decay,
@@ -198,7 +199,7 @@ def create_model(config: PretrainConfig, train_metadata: PuzzleDatasetMetadata, 
                 weight_decay=config.puzzle_emb_weight_decay,
                 world_size=world_size
             ),
-            AdamATan2(
+            AdamW(
                 model.parameters(),
                 lr=0,  # Needs to be set by scheduler
                 weight_decay=config.weight_decay,
