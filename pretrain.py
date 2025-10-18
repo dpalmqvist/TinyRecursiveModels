@@ -657,8 +657,9 @@ def launch(hydra_config: DictConfig):
             if RANK == 0 and metrics is not None:
                 wandb.log(metrics, step=train_state.step)
                 progress_bar.update(train_state.step - progress_bar.n)  # type: ignore
-            if config.ema:
-                ema_helper.update(train_state.model)
+                # Only update EMA on optimizer steps (when metrics are returned)
+                if config.ema:
+                    ema_helper.update(train_state.model)
 
         if _iter_id >= config.min_eval_interval:
             ############ Evaluation
