@@ -1,0 +1,45 @@
+# Training configuration optimized for MPS (Mac GPU) with limited memory
+# Use this config for training on MacBook Pro/Air with Apple Silicon
+
+defaults:
+  - cfg_pretrain
+  - arch: trm_small
+  - _self_
+
+# Smaller batch size for MPS
+batch_size: 2           # Very small batch size to fit in memory
+gradient_accumulation_steps: 16  # Accumulate gradients to simulate batch_size=32
+
+# Sequence length (should match dataset)
+seq_len: 512            # Reduced from 2048
+
+# Optimizer settings
+lr: 1.0e-3              # Learning rate
+weight_decay: 0.01
+adam_beta1: 0.9
+adam_beta2: 0.95
+adam_eps: 1.0e-8
+grad_clip: 1.0
+
+# Training schedule
+max_steps: 10000        # Total training steps
+warmup_steps: 500       # Warmup period
+eval_interval: 500      # Evaluate every N steps
+save_interval: 1000     # Save checkpoint every N steps
+
+# Memory optimizations
+ema: false              # Disable EMA to save memory (uses 2x model memory)
+
+# Logging
+log_interval: 50        # Log every N steps
+wandb: false            # Disable W&B if not needed to save memory
+
+# Checkpointing
+keep_last_n_checkpoints: 3  # Only keep recent checkpoints to save disk space
+
+# Mixed precision (bfloat16 already set in arch config)
+# MPS supports bfloat16 which saves memory
+
+# Set this in your environment before training:
+# export PYTORCH_MPS_HIGH_WATERMARK_RATIO=0.0  # Allow using all available memory
+# export PYTORCH_MPS_LOW_WATERMARK_RATIO=0.7   # Start releasing at 70%

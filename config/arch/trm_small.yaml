@@ -1,0 +1,47 @@
+# Small TRM configuration for memory-constrained environments (MacBook with MPS)
+# This config is optimized for training on devices with limited memory
+
+name: TinyRecursiveReasoningModel_ACTV1
+
+# Smaller model dimensions
+hidden_size: 256        # Reduced from 512
+expansion: 2.0          # Reduced from 4.0
+num_heads: 4            # Reduced from 8
+
+# Fewer reasoning cycles
+H_cycles: 2             # Reduced from 3
+L_cycles: 2             # Reduced from 4
+H_layers: 0             # Not used
+L_layers: 2             # Reduced from 4
+
+# Positional encodings
+pos_encodings: rope     # RoPE is memory efficient
+rope_theta: 10000.0
+
+# Puzzle embeddings (not used for chat)
+puzzle_emb_ndim: 0
+puzzle_emb_len: 0
+
+# Normalization
+rms_norm_eps: 1.0e-5
+
+# ACT (Adaptive Computation Time) config
+halt_max_steps: 1       # Disable ACT to save memory
+halt_exploration_prob: 0.0
+
+# Use causal attention for chat models
+causal: true
+
+# MLP on L level (more memory efficient than attention)
+mlp_t: true
+
+# No continue ACT loss
+no_ACT_continue: true
+
+# Precision
+forward_dtype: bfloat16  # Use bfloat16 to save memory
+
+# Loss configuration
+loss:
+  name: LossHead
+  stablemax: true
