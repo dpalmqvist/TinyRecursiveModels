@@ -135,6 +135,17 @@ def generate_text(
 
     # Tokenize
     input_ids = tokenizer.encode(formatted_prompt, add_special_tokens=False)
+
+    # Pad to seq_len to match model's expected input shape
+    seq_len = model.model.config.seq_len
+    if len(input_ids) < seq_len:
+        # Pad on the left with pad token (0)
+        padding_length = seq_len - len(input_ids)
+        input_ids = [tokenizer.pad_token_id if tokenizer.pad_token_id is not None else 0] * padding_length + input_ids
+    elif len(input_ids) > seq_len:
+        # Truncate from the left (keep most recent context)
+        input_ids = input_ids[-seq_len:]
+
     input_ids = torch.tensor([input_ids], dtype=torch.int32, device=device)
 
     # Prepare batch
@@ -147,8 +158,14 @@ def generate_text(
     # Initialize carry
     carry = model.initial_carry(batch)
 
-    # Generated token IDs
-    generated_ids = input_ids[0].tolist()
+    # Generated token IDs (excluding padding)
+    pad_token_id = tokenizer.pad_token_id if tokenizer.pad_token_id is not None else 0
+    # Find where actual content starts (after padding)
+    input_ids_list = input_ids[0].tolist()
+    # Remove leading padding tokens
+    while input_ids_list and input_ids_list[0] == pad_token_id:
+        input_ids_list.pop(0)
+    generated_ids = input_ids_list
 
     # Generation loop
     for _ in range(max_new_tokens):
@@ -193,16 +210,11 @@ def generate_text(
         # Add to generated sequence
         generated_ids.append(next_token_id)
 
-        # Update batch for next iteration
+        # Update batch for next iteration - shift left and add new token
+        # This maintains the fixed seq_len by removing the leftmost token
         new_token = torch.tensor([[next_token_id]], dtype=torch.int32, device=device)
-        batch["inputs"] = torch.cat([batch["inputs"], new_token], dim=1)
-        batch["labels"] = torch.cat([batch["labels"], torch.full_like(new_token, -100)], dim=1)
-
-        # Check if we need to truncate (avoid exceeding max sequence length)
-        if batch["inputs"].shape[1] > model.model.config.seq_len:
-            # Truncate from the left (keep most recent context)
-            batch["inputs"] = batch["inputs"][:, -model.model.config.seq_len:]
-            batch["labels"] = batch["labels"][:, -model.model.config.seq_len:]
+        batch["inputs"] = torch.cat([batch["inputs"][:, 1:], new_token], dim=1)
+        batch["labels"] = torch.cat([batch["labels"][:, 1:], torch.full_like(new_token, -100)], dim=1)
 
     # Decode
     generated_text = tokenizer.decode(generated_ids, skip_special_tokens=False)
