@@ -1,0 +1,47 @@
+# TRM Chat Model Configuration
+# Adapted for causal language modeling and conversational AI
+
+name: recursive_reasoning.trm@TinyRecursiveReasoningModel_ACTV1
+loss:
+  name: losses@ACTLossHead
+  loss_type: softmax_cross_entropy  # Standard softmax for chat
+
+# ACT (Adaptive Computation Time) settings
+# Set halt_max_steps=1 to disable ACT and use standard forward pass
+halt_exploration_prob: 0.0  # Disabled for initial chat training
+halt_max_steps: 1  # No adaptive computation initially
+
+# Recursive reasoning cycles
+# H_cycles: High-level reasoning iterations
+# L_cycles: Low-level reasoning iterations
+# Set both to minimal values for standard transformer behavior
+H_cycles: 1  # Single pass (can increase for CoT-style reasoning)
+L_cycles: 1  # Single pass
+
+# Layer configuration
+H_layers: 0  # Not used in TRM
+L_layers: 4  # Number of transformer layers (increased for chat)
+
+# Model architecture
+hidden_size: 768  # Increased for better chat performance
+num_heads: 12  # hidden_size // 64
+expansion: 4  # MLP expansion ratio
+
+# Puzzle embeddings (disabled for chat)
+# In chat mode, we don't use per-conversation embeddings
+puzzle_emb_ndim: 0  # Disabled
+
+# Positional encodings
+pos_encodings: rope  # RoPE works well for long contexts
+rope_theta: 10000.0
+
+# Precision
+forward_dtype: bfloat16
+
+# Attention mode
+causal: True  # CRITICAL: Enable causal attention for autoregressive chat
+
+# Additional TRM options
+mlp_t: False  # Use standard attention, not MLP
+puzzle_emb_len: 0  # No puzzle embeddings
+no_ACT_continue: True  # Only use halt signal

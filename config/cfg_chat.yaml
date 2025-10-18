@@ -1,0 +1,48 @@
+# Chat Model Training Configuration
+
+defaults:
+  - arch: trm_chat
+  - _self_
+
+hydra:
+  output_subdir: null
+
+# Data path
+data_paths: ['data/chat-dataset']
+data_paths_test: []
+dataset_type: "chat"  # Use chat dataset loader
+
+# No evaluators for now (will add chat-specific evaluators later)
+evaluators: []
+
+# Training hyperparameters
+global_batch_size: 32  # Smaller for chat (longer sequences)
+
+epochs: 100
+eval_interval: 10
+checkpoint_every_eval: True
+
+# Learning rate schedule
+lr: 3e-4  # Higher LR for chat training
+lr_min_ratio: 0.1  # Decay to 10% of max
+lr_warmup_steps: 1000
+
+# Optimizer settings (following LLaMA/GPT recommendations)
+beta1: 0.9
+beta2: 0.95
+weight_decay: 0.1
+
+# Puzzle embedding settings (not used for chat)
+puzzle_emb_weight_decay: 0.1
+puzzle_emb_lr: 1e-2
+
+# Training settings
+seed: 0
+min_eval_interval: 0  # Start evaluation from beginning
+
+# EMA (Exponential Moving Average)
+ema: True  # Helpful for chat model stability
+ema_rate: 0.999
+
+# Weight freezing
+freeze_weights: False  # Train all parameters

@@ -1,0 +1,276 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# PyTorch
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Training artifacts
+checkpoints/
+logs/
+runs/
+wandb/
+outputs/
+multirun/
+
+# Data
+data/
+*.npy
+*.npz
+*.h5
+*.hdf5
+*.pkl
+*.pickle
+
+# Hydra
+.hydra/
+hydra_outputs/
+
+# Model outputs
+*.json.gz
+*_predictions.json
+*_all_preds.*
+
+# Compiled files
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Distribution / packaging
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+.hypothesis/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre
+.pyre/
+
+# pytype
+.pytype/
+
+# Cython debug symbols
+cython_debug/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+*.swp
+*.swo
+
+# Large model files (use Git LFS if needed)
+*.bin
+*.onnx
+*.tflite
+
+# Dataset archives
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.rar
+*.7z
+
+# Kaggle data
+kaggle/
+
+# Tokenizers
+tokenizer/
+tokenizer_cache/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Documentation build
+docs/_build/
+docs/_static/
+docs/_templates/
+
+# Benchmarks
+benchmark_results/
+profiling/
+
+# Cache
+.cache/
+*.cache
+
+# PyCharm
+.idea/
+
+# VS Code
+.vscode/
+*.code-workspace
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# Mr Developer
+.mr.developer.cfg
+.project
+.pydevproject
+
+# mkdocs
+site/
+
+# Backup files
+*~
+*.backup
+*.orig
+
+# Compiled Python extensions
+*.so
+
+# Cython intermediate files
+*.c
+*.cpp
+
+# Profiling data
+*.prof
+
+# Coverage reports
+.coverage
+htmlcov/
+
+# pytest
+.pytest_cache/
+pytest_cache/
+
+# Weights & Biases (except if you want to track configs)
+wandb/
+
+# MLflow
+mlruns/
+
+# TensorBoard
+events.out.tfevents.*
+
+# Experimental results
+experiments/
+results/
+
+# Temporary model checkpoints during training
+tmp/
+temp/
+checkpoint_tmp/
+
+# Config overrides (personal configs)
+config/local/

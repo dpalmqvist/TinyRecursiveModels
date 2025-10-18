@@ -57,6 +57,9 @@ class TinyRecursiveReasoningModel_ACTV1Config(BaseModel):
 
     forward_dtype: str = "bfloat16"
 
+    # Attention mode
+    causal: bool = False  # For chat models, set to True for causal attention
+
     # Alexia: added
     mlp_t: bool = False # use mlp on L instead of transformer
     puzzle_emb_len: int = 16 # if non-zero, its specified to this value
@@ -79,7 +82,7 @@ class TinyRecursiveReasoningModel_ACTV1Block(nn.Module):
                 head_dim=config.hidden_size // config.num_heads,
                 num_heads=config.num_heads,
                 num_key_value_heads=config.num_heads,
-                causal=False
+                causal=config.causal
             )
         self.mlp = SwiGLU(
             hidden_size=config.hidden_size,

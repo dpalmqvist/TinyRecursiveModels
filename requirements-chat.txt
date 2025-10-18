@@ -1,0 +1,21 @@
+# Additional requirements for chat model training
+# Install with: pip install -r requirements-chat.txt
+
+# Core requirement for tokenizers and pretrained models
+transformers>=4.30.0
+
+# Optional but recommended for better performance
+# sentencepiece>=0.1.99  # For non-BPE tokenizers (e.g., LLaMA)
+# tokenizers>=0.13.0     # Faster tokenization
+
+# Already in base requirements.txt:
+# torch
+# numpy
+# pydantic
+# hydra-core
+# tqdm
+# wandb
+# coolname
+# argdantic
+# einops
+# adam-atan2
