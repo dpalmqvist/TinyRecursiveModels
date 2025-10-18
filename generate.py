@@ -135,6 +135,7 @@ def generate_text(
 
     # Tokenize
     input_ids = tokenizer.encode(formatted_prompt, add_special_tokens=False)
+    original_length = len(input_ids)
 
     # Pad to seq_len to match model's expected input shape
     seq_len = model.model.config.seq_len
