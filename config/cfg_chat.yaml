@@ -8,7 +8,7 @@ hydra:
   output_subdir: null
 
 # Data path
-data_paths: ['data/alpaca-processed']
+data_paths: ['data/alpaca-512']
 data_paths_test: []
 dataset_type: "chat"  # Use chat dataset loader
 
