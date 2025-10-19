@@ -85,7 +85,7 @@ def create_inference_model(state_dict, model_cfg, arch_config, tokenizer, device
     """Create and initialize model for inference"""
     # Update vocab size and seq_len from tokenizer
     model_cfg['vocab_size'] = len(tokenizer)
-    model_cfg['seq_len'] = 2048  # Default, adjust as needed
+    model_cfg['seq_len'] = 512  # Use 512 to match training (dolly-512)
 
     # Create model
     model_cls = load_model_class(arch_config['name'])
@@ -93,6 +93,9 @@ def create_inference_model(state_dict, model_cfg, arch_config, tokenizer, device
 
     # Extract loss head kwargs (exclude 'name' key)
     loss_head_kwargs = {k: v for k, v in arch_config['loss'].items() if k != 'name'}
+
+    print(f"Model config being used: {model_cfg}")
+    print(f"Creating model with hidden_size={model_cfg.get('hidden_size', 'NOT SET')}")
 
     with torch.device(device):
         model = model_cls(model_cfg)
