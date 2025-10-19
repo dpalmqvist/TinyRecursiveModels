@@ -43,5 +43,5 @@ forward_dtype: bfloat16  # Use bfloat16 to save memory
 
 # Loss configuration
 loss:
-  name: losses:LossHead
-  stablemax: true
+  name: losses:ACTLossHead
+  loss_type: stablemax_cross_entropy
