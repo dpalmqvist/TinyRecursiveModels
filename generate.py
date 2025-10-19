@@ -174,12 +174,22 @@ def generate_text(
     generated_ids = input_ids_list
 
     # Generation loop
-    for _ in range(max_new_tokens):
+    for step_idx in range(max_new_tokens):
         # Forward pass
         carry, outputs = model.model(carry=carry, batch=batch)
 
-        # Get logits for the last token
-        logits = outputs["logits"][:, -1, :]  # [batch_size, vocab_size]
+        # Get logits for the last token and convert to float32 immediately
+        logits = outputs["logits"][:, -1, :].float()  # [batch_size, vocab_size]
+
+        # Debug: Check for issues early
+        if step_idx == 0:
+            print(f"First logits - min: {logits.min().item():.2f}, max: {logits.max().item():.2f}, mean: {logits.mean().item():.2f}")
+            if torch.isnan(logits).any():
+                print("ERROR: NaN in logits!")
+                return "Error: Model produced NaN outputs"
+            if torch.isinf(logits).all():
+                print("ERROR: All logits are infinite!")
+                return "Error: Model produced invalid outputs"
 
         # Apply temperature
         if temperature > 0:
@@ -206,8 +216,15 @@ def generate_text(
             logits[indices_to_remove] = float('-inf')
 
         # Sample from distribution
-        probs = F.softmax(logits, dim=-1)
-        next_token_id = torch.multinomial(probs, num_samples=1).item()
+        # Convert to float32 for stable softmax on MPS
+        probs = F.softmax(logits.float(), dim=-1)
+
+        # Handle any numerical issues
+        if torch.isnan(probs).any() or torch.isinf(probs).any():
+            print("Warning: Invalid probabilities detected, using greedy decoding")
+            next_token_id = logits.argmax(dim=-1).item()
+        else:
+            next_token_id = torch.multinomial(probs, num_samples=1).item()
 
         # Check for end of generation
         if next_token_id == tokenizer.eos_token_id:
