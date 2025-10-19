@@ -67,14 +67,16 @@ def load_model_and_config(checkpoint_path: str, device: str = "cuda"):
 
     # Prepare model config
     # Note: These need to match training config
-    model_cfg = {
-        **{k: v for k, v in arch_config.items() if k not in ['name', 'loss']},
+    # Extract all architecture parameters except 'name' and 'loss'
+    model_cfg = {k: v for k, v in arch_config.items() if k not in ['name', 'loss']}
+
+    # Override/set inference-specific parameters
+    model_cfg.update({
         'batch_size': 1,  # For inference
         'vocab_size': None,  # Will be set from tokenizer
         'seq_len': None,  # Will be set from tokenizer
         'num_puzzle_identifiers': 1,  # Not used for chat
-        'causal': True
-    }
+    })
 
     return state_dict, model_cfg, arch_config, config
 
