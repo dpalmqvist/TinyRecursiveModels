@@ -1,0 +1,48 @@
+# Fast Chat Model Configuration - Get results in hours, not days
+# Optimized for rapid iteration on MPS/limited hardware
+
+defaults:
+  - arch: trm_small  # Use smaller architecture
+  - _self_
+
+hydra:
+  output_subdir: null
+
+# Data path - use smaller dataset
+data_paths: ['data/dolly-512']  # Smaller dataset, shorter sequences
+data_paths_test: []
+dataset_type: "chat"
+
+evaluators: []
+
+# Training hyperparameters
+global_batch_size: 8  # Larger batch size
+gradient_accumulation_steps: 4  # Less accumulation needed
+
+epochs: 5  # Just 5 epochs for fast iteration
+eval_interval: 1  # Checkpoint every epoch
+checkpoint_every_eval: True
+
+# Learning rate schedule
+lr: 3e-4
+lr_min_ratio: 0.1
+lr_warmup_steps: 100  # Shorter warmup
+
+# Optimizer settings
+beta1: 0.9
+beta2: 0.95
+weight_decay: 0.1
+
+# Puzzle embedding settings (not used for chat)
+puzzle_emb_weight_decay: 0.1
+puzzle_emb_lr: 1e-2
+
+# Training settings
+seed: 0
+min_eval_interval: 0
+
+# EMA disabled for speed
+ema: False
+
+# Weight freezing
+freeze_weights: False

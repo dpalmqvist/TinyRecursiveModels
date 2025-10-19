@@ -19,8 +19,8 @@ evaluators: []
 global_batch_size: 4  # Smaller for chat (longer sequences)
 gradient_accumulation_steps: 8  # Number of batches to accumulate gradients over
 
-epochs: 100
-eval_interval: 10
+epochs: 10  # Reduced from 100 - enough for initial training
+eval_interval: 1  # Checkpoint every 1 epoch
 checkpoint_every_eval: True
 
 # Learning rate schedule
