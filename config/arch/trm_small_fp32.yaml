@@ -44,4 +44,4 @@ forward_dtype: float32  # MPS has buggy bfloat16 support, use float32 instead
 # Loss configuration
 loss:
   name: losses:ACTLossHead
-  loss_type: stablemax_cross_entropy
+  loss_type: softmax_cross_entropy  # Use standard softmax for numerical stability

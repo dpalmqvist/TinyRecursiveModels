@@ -41,3 +41,6 @@ min_eval_interval: 0 # when to start the eval
 ema: False # use Exponential-Moving-Average
 ema_rate: 0.999 # EMA-rate
 freeze_weights: False # If True, freeze weights and only learn the embeddings
+
+# Gradient clipping
+grad_clip_norm: 1.0  # Max gradient norm for clipping (helps prevent NaN/Inf gradients)

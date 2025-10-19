@@ -331,8 +331,8 @@ def train_batch(config: PretrainConfig, train_state: TrainState, batch: Any, glo
     # Forward
     train_state.carry, loss, metrics, _, _ = train_state.model(carry=train_state.carry, batch=batch, return_keys=[])
 
-    # Scale loss by both batch size and accumulation steps
-    loss_scale = 1.0 / (global_batch_size * config.gradient_accumulation_steps)
+    # Scale loss by accumulation steps only (loss is already summed over batch)
+    loss_scale = 1.0 / config.gradient_accumulation_steps
     (loss_scale * loss).backward()
 
     # Check if we should step the optimizer
