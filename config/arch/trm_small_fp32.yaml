@@ -26,8 +26,8 @@ puzzle_emb_len: 0
 rms_norm_eps: 1.0e-5
 
 # ACT (Adaptive Computation Time) config
-halt_max_steps: 1       # Disable ACT to save memory
-halt_exploration_prob: 0.0
+halt_max_steps: 4       # Allow up to 4 computation steps (H_cycles * L_cycles = 2 * 2 = 4)
+halt_exploration_prob: 0.1  # 10% exploration during training
 
 # Use causal attention for chat models
 causal: true

@@ -76,6 +76,8 @@ def load_model_and_config(checkpoint_path: str, device: str = "cuda"):
         'vocab_size': None,  # Will be set from tokenizer
         'seq_len': None,  # Will be set from tokenizer
         'num_puzzle_identifiers': 1,  # Not used for chat
+        'halt_exploration_prob': 0.0,  # No exploration during inference
+        # Use halt_max_steps from config for proper recursive reasoning
     })
 
     return state_dict, model_cfg, arch_config, config
