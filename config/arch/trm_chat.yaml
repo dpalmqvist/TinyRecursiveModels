@@ -20,7 +20,7 @@ L_cycles: 1  # Single pass
 
 # Layer configuration
 H_layers: 0  # Not used in TRM
-L_layers: 2  # Number of transformer layers (increased for chat)
+L_layers: 4  # Number of transformer layers (increased for chat)
 
 # Model architecture
 hidden_size: 384  # Increased for better chat performance
