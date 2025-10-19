@@ -97,6 +97,9 @@ class PretrainConfig(pydantic.BaseModel):
     ema_rate: float = 0.999 # EMA-rate
     freeze_weights: bool = False # If True, freeze weights and only learn the embeddings
 
+    # Gradient clipping
+    grad_clip_norm: Optional[float] = None # Max gradient norm for clipping (None = no clipping)
+
 @dataclass
 class TrainState:
     model: nn.Module
@@ -348,6 +351,32 @@ def train_batch(config: PretrainConfig, train_state: TrainState, batch: Any, glo
                 if param.grad is not None:
                     dist.all_reduce(param.grad)
 
+        # Check for NaN/Inf in gradients before clipping
+        grad_norm = None
+        has_nan_grad = False
+        has_inf_grad = False
+        for param in train_state.model.parameters():
+            if param.grad is not None:
+                if torch.isnan(param.grad).any():
+                    has_nan_grad = True
+                if torch.isinf(param.grad).any():
+                    has_inf_grad = True
+
+        if has_nan_grad or has_inf_grad:
+            if rank == 0:
+                print(f"WARNING: Step {train_state.step} - NaN={has_nan_grad}, Inf={has_inf_grad} in gradients! Skipping optimizer step.")
+            # Zero gradients and skip this update
+            for optim in train_state.optimizers:
+                optim.zero_grad()
+            return None
+
+        # Apply gradient clipping if configured
+        if config.grad_clip_norm is not None:
+            grad_norm = torch.nn.utils.clip_grad_norm_(
+                train_state.model.parameters(),
+                config.grad_clip_norm
+            ).item()
+
         # Apply optimizer
         lr_this_step = None
         for optim, base_lr in zip(train_state.optimizers, train_state.optimizer_lrs):
@@ -379,6 +408,8 @@ def train_batch(config: PretrainConfig, train_state: TrainState, batch: Any, glo
 
                 reduced_metrics["train/lr"] = lr_this_step
                 reduced_metrics["train/micro_step"] = train_state.micro_step
+                if grad_norm is not None:
+                    reduced_metrics["train/grad_norm"] = grad_norm
                 return reduced_metrics
 
 def evaluate(
