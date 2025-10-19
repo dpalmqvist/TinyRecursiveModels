@@ -1,9 +1,9 @@
 # TRM Chat Model Configuration
 # Adapted for causal language modeling and conversational AI
 
-name: recursive_reasoning.trm@TinyRecursiveReasoningModel_ACTV1
+name: recursive_reasoning.trm:TinyRecursiveReasoningModel_ACTV1
 loss:
-  name: losses@ACTLossHead
+  name: losses:ACTLossHead
   loss_type: softmax_cross_entropy  # Standard softmax for chat
 
 # ACT (Adaptive Computation Time) settings

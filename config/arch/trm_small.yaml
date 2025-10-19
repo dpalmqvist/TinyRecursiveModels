@@ -1,7 +1,7 @@
 # Small TRM configuration for memory-constrained environments (MacBook with MPS)
 # This config is optimized for training on devices with limited memory
 
-name: recursive_reasoning.trm@TinyRecursiveReasoningModel_ACTV1
+name: recursive_reasoning.trm:TinyRecursiveReasoningModel_ACTV1
 
 # Smaller model dimensions
 hidden_size: 256        # Reduced from 512
@@ -43,5 +43,5 @@ forward_dtype: bfloat16  # Use bfloat16 to save memory
 
 # Loss configuration
 loss:
-  name: losses@LossHead
+  name: losses:LossHead
   stablemax: true

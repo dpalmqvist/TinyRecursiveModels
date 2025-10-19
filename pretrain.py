@@ -560,7 +560,7 @@ def load_synced_config(hydra_config: DictConfig, rank: int, world_size: int) -> 
         if config.project_name is None:
             config.project_name = f"{os.path.basename(config.data_paths[0]).capitalize()}-ACT-torch"
         if config.run_name is None:
-            config.run_name = f"{config.arch.name.split('@')[-1]} {coolname.generate_slug(2)}"
+            config.run_name = f"{config.arch.name.split(':')[-1]} {coolname.generate_slug(2)}"
         if config.checkpoint_path is None:
             config.checkpoint_path = os.path.join("checkpoints", config.project_name, config.run_name)
 
