@@ -4,14 +4,14 @@
 name: recursive_reasoning.trm:TinyRecursiveReasoningModel_ACTV1
 
 # Smaller model dimensions
-hidden_size: 512
+hidden_size: 768
 expansion: 2.0          # Reduced from 4.0
 num_heads: 8            # Reduced from 8
 
 # Fewer reasoning cycles
-H_cycles: 2             # Reduced from 3
-L_cycles: 2             # Reduced from 4
-H_layers: 0             # Not used
+H_cycles: 3             # Reduced from 3
+L_cycles: 4             # Reduced from 4
+H_layers: 2             # Not used
 L_layers: 2             # Reduced from 4
 
 # Positional encodings

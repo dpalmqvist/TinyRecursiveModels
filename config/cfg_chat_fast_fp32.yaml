@@ -20,7 +20,7 @@ evaluators: []
 global_batch_size: 8  # Larger batch size
 gradient_accumulation_steps: 4  # Less accumulation needed
 
-epochs: 5  # Just 5 epochs for fast iteration
+epochs: 10  # Just 5 epochs for fast iteration
 eval_interval: 1  # Checkpoint every epoch
 checkpoint_every_eval: True
 
