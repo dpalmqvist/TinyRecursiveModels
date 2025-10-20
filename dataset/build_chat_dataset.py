@@ -152,8 +152,8 @@ def format_conversation_for_training(
     Format conversation into input/label token sequences for causal LM training.
 
     Returns:
-        inputs: Token IDs (same as labels, but shifted for next-token prediction)
-        labels: Token IDs with masking for non-assistant tokens
+        inputs: Token IDs for input sequence
+        labels: Token IDs shifted by 1 for next-token prediction
     """
 
     # Build the formatted conversation
@@ -173,15 +173,20 @@ def format_conversation_for_training(
     # Tokenize
     tokens = tokenizer.encode(full_text, add_special_tokens=False)
 
-    # Truncate if too long
+    # Truncate if too long (reserve 1 token for shifting)
     if len(tokens) > max_length:
         tokens = tokens[:max_length]
 
-    # Create labels (mask non-assistant parts)
-    # For simplicity in this initial version, we train on all tokens
-    # In production, you'd mask user tokens and only train on assistant responses
-    inputs = tokens
-    labels = tokens.copy()
+    # Create inputs and labels for next-token prediction
+    # For causal LM: model sees tokens[:-1] and predicts tokens[1:]
+    # We pad to maintain max_length for both inputs and labels
+    if len(tokens) > 0:
+        inputs = tokens[:-1] + [tokenizer.pad_token_id]
+        labels = tokens[1:] + [-100]  # -100 will be ignored in loss calculation
+    else:
+        # Handle empty sequence edge case
+        inputs = [tokenizer.pad_token_id]
+        labels = [-100]
 
     return inputs, labels
 
