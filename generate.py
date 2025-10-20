@@ -99,12 +99,36 @@ def create_inference_model(state_dict, model_cfg, arch_config, tokenizer, device
     print(f"Model config being used: {model_cfg}")
     print(f"Creating model with hidden_size={model_cfg.get('hidden_size', 'NOT SET')}")
 
+    # Fix state_dict keys if they have _orig_mod prefix (from torch.compile during training)
+    # This happens when models are saved after being compiled
+    fixed_state_dict = {}
+    has_orig_mod_prefix = any(k.startswith('_orig_mod.') for k in state_dict.keys())
+
+    if has_orig_mod_prefix:
+        print("Detected _orig_mod prefix in checkpoint (compiled model). Stripping prefixes...")
+        for key, value in state_dict.items():
+            if key.startswith('_orig_mod.'):
+                # Remove the _orig_mod. prefix
+                new_key = key[len('_orig_mod.'):]
+                fixed_state_dict[new_key] = value
+            else:
+                fixed_state_dict[key] = value
+    else:
+        fixed_state_dict = state_dict
+
     with torch.device(device):
         model = model_cls(model_cfg)
         model = loss_head_cls(model, **loss_head_kwargs)
 
-        # Load weights
-        model.load_state_dict(state_dict, strict=False)
+        # Load weights - use strict=False to allow for missing/extra keys
+        # but print what's missing/unexpected
+        missing_keys, unexpected_keys = model.load_state_dict(fixed_state_dict, strict=False)
+
+        if missing_keys:
+            print(f"WARNING: Missing keys in checkpoint: {missing_keys}")
+        if unexpected_keys:
+            print(f"WARNING: Unexpected keys in checkpoint: {unexpected_keys}")
+
         model.eval()
 
     return model

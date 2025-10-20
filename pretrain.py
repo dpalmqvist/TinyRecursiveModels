@@ -268,7 +268,19 @@ def save_train_state(config: PretrainConfig, train_state: TrainState):
         return
 
     os.makedirs(config.checkpoint_path, exist_ok=True)
-    torch.save(train_state.model.state_dict(), os.path.join(config.checkpoint_path, f"step_{train_state.step}"))
+
+    # Get state dict - if model is compiled (torch.compile), we need to access _orig_mod
+    # to get the clean state_dict without _orig_mod. prefixes
+    model = train_state.model
+    if hasattr(model, '_orig_mod'):
+        # Model was compiled, get the underlying model's state_dict
+        state_dict = model._orig_mod.state_dict()
+        print(f"Saving compiled model checkpoint (accessing _orig_mod for clean state_dict)")
+    else:
+        # Model was not compiled
+        state_dict = model.state_dict()
+
+    torch.save(state_dict, os.path.join(config.checkpoint_path, f"step_{train_state.step}"))
 
 
 def load_checkpoint(model: nn.Module, config: PretrainConfig, device: str = "cuda"):
@@ -278,9 +290,44 @@ def load_checkpoint(model: nn.Module, config: PretrainConfig, device: str = "cud
         # Load state dict
         state_dict = torch.load(config.load_checkpoint, map_location=device)
 
+        # Check if checkpoint has _orig_mod prefix (from torch.compile)
+        has_orig_mod_prefix = any(k.startswith('_orig_mod.') for k in state_dict.keys())
+
+        # Determine if we need to add or remove _orig_mod prefix based on model structure
+        # The model passed here might be compiled (has _orig_mod) or not
+        model_is_compiled = hasattr(model, '_orig_mod')
+
+        if has_orig_mod_prefix and not model_is_compiled:
+            # Old checkpoint (with prefix) loading into non-compiled model - strip prefix
+            print("Stripping _orig_mod prefix from checkpoint to match non-compiled model")
+            new_state_dict = {}
+            for key, value in state_dict.items():
+                if key.startswith('_orig_mod.'):
+                    new_key = key[len('_orig_mod.'):]
+                    new_state_dict[new_key] = value
+                else:
+                    new_state_dict[key] = value
+            state_dict = new_state_dict
+        elif not has_orig_mod_prefix and model_is_compiled:
+            # New checkpoint (clean) loading into compiled model - add prefix
+            print("Adding _orig_mod prefix to checkpoint to match compiled model")
+            new_state_dict = {}
+            for key, value in state_dict.items():
+                new_state_dict[f'_orig_mod.{key}'] = value
+            state_dict = new_state_dict
+
         # Resize and reset puzzle emb if needed
-        puzzle_emb_name = "_orig_mod.model.inner.puzzle_emb.weights"
-        expected_shape: torch.Size = model.model.puzzle_emb.weights.shape  # type: ignore
+        # Try both with and without prefix
+        puzzle_emb_name_prefixed = "_orig_mod.model.inner.puzzle_emb.weights" if model_is_compiled else "model.inner.puzzle_emb.weights"
+        puzzle_emb_name_clean = "model.inner.puzzle_emb.weights"
+
+        puzzle_emb_name = puzzle_emb_name_prefixed if puzzle_emb_name_prefixed in state_dict else puzzle_emb_name_clean
+
+        if model_is_compiled:
+            expected_shape: torch.Size = model._orig_mod.model.puzzle_emb.weights.shape  # type: ignore
+        else:
+            expected_shape: torch.Size = model.model.puzzle_emb.weights.shape  # type: ignore
+
         if puzzle_emb_name in state_dict:
             puzzle_emb = state_dict[puzzle_emb_name]
             if puzzle_emb.shape != expected_shape:
@@ -289,7 +336,9 @@ def load_checkpoint(model: nn.Module, config: PretrainConfig, device: str = "cud
                 state_dict[puzzle_emb_name] = (
                     torch.mean(puzzle_emb, dim=0, keepdim=True).expand(expected_shape).contiguous()
                 )
+
         model.load_state_dict(state_dict, assign=True)
+        print("Checkpoint loaded successfully")
 
 
 def compute_lr(base_lr: float, config: PretrainConfig, train_state: TrainState):
