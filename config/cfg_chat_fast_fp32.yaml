@@ -1,4 +1,5 @@
 # Fast Chat Model Configuration with float32 precision
+# Fast Chat Model Configuration with float32 precision
 # Uses float32 instead of bfloat16 for numerical stability on Apple Silicon MPS
 
 defaults:
@@ -9,7 +10,7 @@ hydra:
   output_subdir: null
 
 # Data path - use smaller dataset
-data_paths: ['data/dolly-512']  # Smaller dataset, shorter sequences
+data_paths: ['data/alpaca-512']  # Smaller dataset, shorter sequences
 data_paths_test: []
 dataset_type: "chat"
 
