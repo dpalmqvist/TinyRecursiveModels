@@ -245,8 +245,9 @@ def cosine_schedule_with_warmup_lr_lambda(
 
 
 def init_train_state(config: PretrainConfig, train_metadata: PuzzleDatasetMetadata, rank: int, world_size: int, device: str = "cuda"):
-    # Estimated total training steps
-    total_steps = int(config.epochs * train_metadata.total_groups * train_metadata.mean_puzzle_examples / config.global_batch_size)
+    # Estimated total training steps (optimizer steps, accounting for gradient accumulation)
+    total_micro_steps = int(config.epochs * train_metadata.total_groups * train_metadata.mean_puzzle_examples / config.global_batch_size)
+    total_steps = total_micro_steps // config.gradient_accumulation_steps
 
     # Model
     model, optimizers, optimizer_lrs = create_model(config, train_metadata, rank=rank, world_size=world_size, device=device)
